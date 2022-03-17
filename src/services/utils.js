@@ -2,7 +2,7 @@ import axios from "axios";
 
 const domain =
   process.env.NODE_ENV === "development"
-    ? "https://2db0-2a10-800b-3039-0-3459-b209-19bd-7a57.eu.ngrok.io"
+    ? "https://histadrut-inters.herokuapp.com"
     : "https://2db0-2a10-800b-3039-0-3459-b209-19bd-7a57.eu.ngrok.io";
 export async function addBoardRestriction(restriction) {
   const filteredRestriction = filterRestriction(restriction);
