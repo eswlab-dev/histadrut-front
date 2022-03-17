@@ -28,20 +28,28 @@ export default function Restriction({
 
   return restriction ? (
     <div className="restriction" key={i}>
-      <Select
-        className="restriction-select"
-        options={boardsForDropdown}
-        onChange={(board) => onSetRestriction(i, board, true)}
-        value={restriction.board}
-      />
-      <Select
-        className="restriction-select"
-        onChange={(column) => onSetRestriction(i, column, false)}
-        options={columnsForDropdown}
-        value={restriction.columns}
-        isClearable
-        isMulti
-      />
+      <label>
+        Board
+        <Select
+          className="restriction-select"
+          options={boardsForDropdown}
+          placeholder="Please choose a board"
+          onChange={(board) => onSetRestriction(i, board, true)}
+          value={restriction.board}
+        />
+      </label>
+      <label>
+        Columns
+        <Select
+          className="restriction-select"
+          placeholder="Please choose mandatory columns"
+          onChange={(column) => onSetRestriction(i, column, false)}
+          options={columnsForDropdown}
+          value={restriction.columns}
+          isClearable
+          isMulti
+        />
+      </label>
       <div className="button-div">
         <Button
           loading={isLoading?.edit}

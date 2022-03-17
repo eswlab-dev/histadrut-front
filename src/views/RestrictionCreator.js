@@ -13,7 +13,7 @@ export default function RestrictionCreator({
   const [isLoading, setIsLoading] = useState(false);
 
   const [restriction, setRestriction] = useState({
-    board: { value: null, label: null },
+    board: { value: null, label: "Choose a board to restrict" },
     columns: [],
   });
   useEffect(() => {
@@ -42,19 +42,27 @@ export default function RestrictionCreator({
 
   return (
     <div className="create-restriction">
-      <Select
-        className="restriction-select"
-        options={boardsForDropdown}
-        onChange={(board) => onSetRestriction(true, board)}
-        value={restriction.board}
-      />
-      <Select
-        className="restriction-select"
-        onChange={(column) => onSetRestriction(false, column)}
-        options={columnsForDropdown}
-        isClearable
-        isMulti
-      />
+      <label>
+        Board
+        <Select
+          placeholder="Choose board to restrict"
+          className="restriction-select"
+          options={boardsForDropdown}
+          onChange={(board) => onSetRestriction(true, board)}
+          value={restriction.board}
+        />
+      </label>
+      <label>
+        Columns
+        <Select
+          placeholder="Choose column to restrict"
+          className="restriction-select"
+          onChange={(column) => onSetRestriction(false, column)}
+          options={columnsForDropdown}
+          isClearable
+          isMulti
+        />
+      </label>
       <div className="button-div">
         <Button
           size={Button.sizes.LARGE}
