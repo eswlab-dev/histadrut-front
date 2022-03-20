@@ -1,58 +1,57 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import mondaySdk from "monday-sdk-js";
 import "monday-ui-react-core/dist/main.css";
-//Explore more Monday React Components here: https://style.monday.com/
+import Swal from "sweetalert2";
+import Loader from "monday-ui-react-core/dist/Loader";
 import * as utils from "./services/utils";
-import RestrictionCreator from "./views/RestrictionCreator";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import NavBar from "./components/NavBar";
-import ExistingRestrictions from "./views/ExistingRestrictions";
-import Footer from "./components/Footer";
+const RestrictionCreator = lazy(() => import("./views/RestrictionCreator"));
+const ExistingRestrictions = lazy(() => import("./views/ExistingRestrictions"));
+const NavBar = lazy(() => import("./components/NavBar"));
+const Footer = lazy(() => import("./components/Footer"));
 
 const monday = mondaySdk();
 
 export default function App() {
   const [boards, setBoards] = useState([]);
-  console.log(`App -> boards`, boards);
   const [account, setAccount] = useState();
-  const [currentNav, setCurrentNav] = useState("existing");
+  const [currentNav, setCurrentNav] = useState("");
   const [existingRestrictions, setExistingRestrictions] = useState([]);
-  console.log(`App -> existingRestrictions`, existingRestrictions);
   useEffect(() => {
+    setCurrentNav(
+      window.location.hash.includes("create") ? "create" : "existing"
+    );
     getBoards();
     console.log("אהוב את המלאכה");
   }, []);
   useEffect(() => {
+    account && getRestrictions();
+  }, [account]);
+  useEffect(() => {
     const filteredBoards = boards?.filter(
       (board) =>
         !existingRestrictions.find(
-          (restriction) => Number(restriction.board.value) === Number(board.id)
+          (restriction) =>
+            Number(restriction?.board?.value) === Number(board?.id)
         )
     );
-    console.log(`useEffect -> filteredBoards`, filteredBoards.length);
-    console.log(
-      `useEffect -> existingRestrictions`,
-      existingRestrictions.length
-    );
-    console.log(`useEffect -> boards`, boards.length);
     setBoards(filteredBoards);
   }, [existingRestrictions]);
   const addNewRestriction = async (newRestriction) => {
-    const columnIds = newRestriction.columns.map((col) => col.value);
+    const columnIds = newRestriction.columns.map((col) => col?.value);
     const _newRestriction = {
       accountId: account,
       ...newRestriction,
     };
-
     const _newRest = await utils.addBoardRestriction(_newRestriction);
-    const labeledRestriction = await getRestrictionLabels([..._newRest]);
+    const labeledRestriction = await getRestrictionLabels([newRestriction]);
+    setExistingRestrictions([...existingRestrictions, ...labeledRestriction]);
   };
 
   const getBoardColumns = async (restriction) => {
     try {
       const { board } = restriction;
-      console.log(`getBoardColumns -> board`, board);
       if (board?.value) {
         const query = `query{
           boards(ids:${board.value}){
@@ -70,7 +69,7 @@ export default function App() {
           .map((col) => {
             return { value: col.id, label: col.title };
           });
-        // console.log(`getBoardColumns -> columns`, columns);
+
         return filteredColumns;
       } else {
       }
@@ -78,18 +77,22 @@ export default function App() {
       console.log(`getBoardColumns -> err`, err);
     }
   };
+  const getRestrictions = async () => {
+    let rests = await utils.getExistingBoardRestrictions(account);
+    rests = await Promise.all(rests);
+    const fullRests = await getRestrictionLabels(rests);
+    setExistingRestrictions(fullRests);
+  };
   const getRestrictionLabels = async (restrictions) => {
+    console.log(`getRestrictionLabels -> restrictions`, restrictions);
     try {
       const labeled = [];
       for (let restriction of restrictions) {
-        // }
-        // restrictions?.map(async (restriction) => {
         const query = `query{
           boards(ids:${restriction.boardId || restriction.board.value}){
             name
             columns(ids:${JSON.stringify(restriction.columnIds)}){
               id
-              type
               title
             }
           }
@@ -109,9 +112,7 @@ export default function App() {
           columns,
           _id: restriction._id,
         });
-        // });
       }
-      // await Promise.all(labeled);
       return labeled;
     } catch (error) {
       console.log(`getRestrictionLabels -> error`, error);
@@ -142,40 +143,70 @@ export default function App() {
       });
     }
   }, [boards]);
+  const validateNewRestriction = (restriction) => {
+    console.log(`validateNewRestriction -> restriction`, restriction);
+    const { label, value } = restriction?.board;
+    const { columns } = restriction;
+    if (label && value && columns.length) {
+      return true;
+    } else {
+      Swal.fire({
+        title: "Couldn't add restriction",
+        text: "some columns are missing",
+        icon: "warning",
+        returnFocus: true,
+        allowEnterKey: true,
+        allowEscapeKey: true,
+      });
+      return false;
+    }
+  };
 
   return (
-    <div className="App">
-      <HashRouter>
-        <NavBar currentNav={currentNav} setCurrentNav={setCurrentNav} />
-        <Routes>
-          <Route
-            path="/create"
-            element={
-              <RestrictionCreator
-                boardsForDropdown={boardsForDropdown}
-                boards={boards}
-                monday={monday}
-                addNewRestriction={addNewRestriction}
-                getBoardColumns={getBoardColumns}
-              />
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ExistingRestrictions
-                boardsForDropdown={boardsForDropdown}
-                getBoardColumns={getBoardColumns}
-                getRestrictionLabels={getRestrictionLabels}
-                account={account}
-                restrictions={existingRestrictions}
-                setRestrictions={setExistingRestrictions}
-              />
-            }
-          />
-        </Routes>
-        <Footer />
-      </HashRouter>
-    </div>
+    <Suspense
+      fallback={
+        <div className="loader-div">
+          <div className="loader">
+            <Loader />
+          </div>
+        </div>
+      }
+    >
+      <div className="App">
+        <HashRouter>
+          <NavBar currentNav={currentNav} setCurrentNav={setCurrentNav} />
+          <Routes>
+            <Route
+              path="/create"
+              element={
+                <RestrictionCreator
+                  boardsForDropdown={boardsForDropdown}
+                  boards={boards}
+                  monday={monday}
+                  addNewRestriction={addNewRestriction}
+                  getBoardColumns={getBoardColumns}
+                  validateNewRestriction={validateNewRestriction}
+                />
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ExistingRestrictions
+                  boardsForDropdown={boardsForDropdown}
+                  getBoardColumns={getBoardColumns}
+                  account={account}
+                  restrictions={existingRestrictions}
+                  setRestrictions={setExistingRestrictions}
+                  validateNewRestriction={validateNewRestriction}
+                  getRestrictions={getRestrictions}
+                />
+              }
+            />
+          </Routes>
+          <Footer />
+        </HashRouter>
+      </div>
+    </Suspense>
   );
 }

@@ -9,7 +9,6 @@ body {
   width: 100vw;
   display: flex;
   flex-direction: row;
-  align-items: center;
   justify-content: space-between;
   /* background-color: black; */
 }
@@ -18,15 +17,21 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   /* border: 1px solid black;
   border-radius: 4px; */
-  margin: 10px;
+  /* margin: 10px;*/
   padding: 5px;
 }
 .restriction-select {
   min-width: 25vw;
+  width: 100%;
 }
+.restriction-label {
+  width: 100%;
+  margin-block: 5px;
+}
+
 .footer {
   display: flex;
   position: absolute;
@@ -46,23 +51,25 @@ body {
   top: 0;
   width: 100%;
   border-bottom: #fa9401 solid 3px;
+  z-index: 3;
+  max-height: 20px;
 }
 .nav-link {
   padding-inline: 5px;
   text-decoration: none;
 }
+.nav-link:visited {
+  color: inherit;
+}
 .current-nav {
-  /* width: 25%; */
-  color: #fa9401;
-  /* text-decoration: 1px solid #fa9401; */
+  color: #fa9401 !important;
   align-self: center;
   display: inline-block;
   text-align: center;
   vertical-align: middle;
-  /* padding: 4px 8px; */
-  /* font: normal normal bold 15px arial; */
 }
 .existing-restrictions {
+  padding-top: 30px;
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
@@ -70,13 +77,41 @@ body {
   width: auto;
   /* padding-top: 10%; */
   z-index: 2;
+  justify-content: space-evenly;
 }
 .button-div {
   margin: 5px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }
 .create-restriction {
+  align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+}
+.loader-div {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.loader {
+  width: 150px;
+  height: 150px;
+  color: #0085ff;
+}
+.small-loader-div {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  color: #0085ff;
+}
+.small-loader {
+  width: 20px !important;
+  height: 20px !important;
 }

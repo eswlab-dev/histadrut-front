@@ -5,61 +5,51 @@ import * as utils from "../services/utils";
 export default function ExistingRestrictions({
   getBoardColumns,
   account,
-  getRestrictionLabels,
   boardsForDropdown,
   restrictions,
   setRestrictions,
+  validateNewRestriction,
+  getRestrictions,
 }) {
-  const [buttonLoading, setButtonLoading] = useState([]);
   useEffect(() => {
     if (account) getRestrictions();
   }, [account]);
-  useEffect(() => {
-    if (!buttonLoading.length)
-      setButtonLoading(
-        Array.from(restrictions, (load) => {
-          return { edit: false, delete: false };
-        })
-      );
-  }, [restrictions]);
-  const onSetLoadState = (i, key, isLoad) => {
-    const newLoadState = buttonLoading;
-    newLoadState[i] = { ...newLoadState, [key]: isLoad };
-    setButtonLoading(newLoadState);
+
+  const editRestriction = async (i, restriction, onSetLoadState) => {
+    onSetLoadState("edit", true);
+    if (validateNewRestriction(restriction)) {
+      const newRestriction = (await utils.editRestriction(restriction, account))
+        .data;
+      restrictions[i] = newRestriction;
+      setRestrictions(restrictions);
+    }
+    onSetLoadState("edit", false);
   };
-  const editRestriction = async (i, restriction) => {
-    onSetLoadState(i, "edit", true);
-    const newRestriction = (await utils.editRestriction(restriction, account))
-      .data;
-    restrictions[i] = newRestriction;
-    setRestrictions(restrictions);
-    onSetLoadState(i, "edit", false);
-  };
-  const onSetRestriction = (i, item, isBoard) => {
+
+  const onSetRestriction = (i, item, isBoard, onSetLoadState) => {
     if (isBoard) {
+      onSetLoadState("board", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { board: item, columns: [] };
       setRestrictions([...newRestrictions]);
+      onSetLoadState("board", false);
     } else {
+      onSetLoadState("columns", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { ...restrictions[i], columns: item };
       setRestrictions([...newRestrictions]);
+      onSetLoadState("columns", false);
     }
   };
-  const getRestrictions = async () => {
-    let rests = await utils.getExistingBoardRestrictions(account);
-    rests = await Promise.all(rests);
-    const fullRests = await getRestrictionLabels(rests);
-    setRestrictions(fullRests);
-  };
-  const deleteRestriction = async (i) => {
-    onSetLoadState(i, "delete", true);
+
+  const deleteRestriction = async (i, onSetLoadState) => {
+    onSetLoadState("delete", true);
     const restriction = restrictions[i];
     const deletedRest = await utils.deleteRestriction(restriction);
     const filteredRestrictions = restrictions.filter(
       (rest) => rest._id !== restriction._id
     );
-    onSetLoadState(i, "delete", false);
+    onSetLoadState("delete", false);
     setRestrictions([...filteredRestrictions]);
   };
 
@@ -75,7 +65,6 @@ export default function ExistingRestrictions({
           deleteRestriction={deleteRestriction}
           boardsForDropdown={boardsForDropdown}
           onSetRestriction={onSetRestriction}
-          isLoading={buttonLoading[i]}
         />
       ))}
     </div>

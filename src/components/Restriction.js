@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Button from "monday-ui-react-core/dist/Button";
+import Loader from "monday-ui-react-core/dist/Loader";
 
 import Select from "react-select";
 export default function Restriction({
@@ -10,11 +11,15 @@ export default function Restriction({
   deleteRestriction,
   boardsForDropdown,
   onSetRestriction,
-  isLoading,
 }) {
   const [columnsForDropdown, setColumnsForDropdown] = useState([]);
+  const [isLoading, setIsLoading] = useState({
+    edit: false,
+    delete: false,
+    board: false,
+    columns: false,
+  });
   useEffect(() => {
-    console.log("change");
     if (restriction) {
       getColumns();
       // setRestriction(restriction);
@@ -25,27 +30,37 @@ export default function Restriction({
     setColumnsForDropdown(columns);
     console.log(`getColumns -> columns`, columns);
   };
+  const onSetLoadState = (key, isLoad) => {
+    setIsLoading({ ...isLoading, [key]: isLoad });
+  };
 
   return restriction ? (
     <div className="restriction" key={i}>
-      <label>
+      <label className="restriction-label">
         Board
         <Select
           className="restriction-select"
           options={boardsForDropdown}
           placeholder="Please choose a board"
-          onChange={(board) => onSetRestriction(i, board, true)}
+          onChange={(board) => {
+            onSetRestriction(i, board, true, onSetLoadState);
+          }}
           value={restriction.board}
+          isLoading={isLoading?.board}
         />
       </label>
-      <label>
+      <label className="restriction-label">
         Columns
         <Select
           className="restriction-select"
           placeholder="Please choose mandatory columns"
-          onChange={(column) => onSetRestriction(i, column, false)}
+          onChange={(column) => {
+            onSetRestriction(i, column, false, onSetLoadState);
+          }}
           options={columnsForDropdown}
           value={restriction.columns}
+          isLoading={isLoading?.columns}
+          isDisabled={!columnsForDropdown?.length}
           isClearable
           isMulti
         />
@@ -54,7 +69,7 @@ export default function Restriction({
         <Button
           loading={isLoading?.edit}
           onClick={(e) => {
-            editRestriction(i, restriction);
+            editRestriction(i, restriction, onSetLoadState);
           }}
         >
           Update
@@ -65,7 +80,7 @@ export default function Restriction({
           color={Button.colors.NEGATIVE}
           className="add-button"
           onClick={(e) => {
-            deleteRestriction(i);
+            deleteRestriction(i, onSetLoadState);
           }}
         >
           Delete
@@ -73,6 +88,10 @@ export default function Restriction({
       </div>
     </div>
   ) : (
-    <div>loading.. LOADER!.</div>
+    <div className="loader-div">
+      <div className="loader">
+        <Loader />
+      </div>
+    </div>
   );
 }
