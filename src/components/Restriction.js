@@ -58,8 +58,8 @@ export default function Restriction({
             onSetRestriction(i, column, false, onSetLoadState);
           }}
           options={columnsForDropdown}
-          value={restriction.columns}
-          isLoading={isLoading?.columns}
+          value={restriction?.columns}
+          isLoading={isLoading?.columns || !columnsForDropdown?.length}
           isDisabled={!columnsForDropdown?.length}
           isClearable
           isMulti

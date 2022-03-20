@@ -10,6 +10,7 @@ export default function ExistingRestrictions({
   setRestrictions,
   validateNewRestriction,
   getRestrictions,
+  monday,
 }) {
   useEffect(() => {
     if (account) getRestrictions();
@@ -22,6 +23,12 @@ export default function ExistingRestrictions({
         .data;
       restrictions[i] = newRestriction;
       setRestrictions(restrictions);
+    } else {
+      monday.execute("notice", {
+        message: `Please choose columns to restrict by!`,
+        type: "error", // or "error" (red), or "info" (blue)
+        timeout: 10000,
+      });
     }
     onSetLoadState("edit", false);
   };

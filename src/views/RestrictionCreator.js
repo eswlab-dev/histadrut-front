@@ -3,6 +3,7 @@ import Button from "monday-ui-react-core/dist/Button";
 import * as utils from "../services/utils";
 import Select from "react-select";
 import Loader from "monday-ui-react-core/dist/Loader";
+import Swal from "sweetalert2";
 
 export default function RestrictionCreator({
   monday,
@@ -10,7 +11,9 @@ export default function RestrictionCreator({
   addNewRestriction,
   getBoardColumns,
   validateNewRestriction,
+  slug,
 }) {
+  console.log(`slug`, slug);
   const [boardColumns, setBoardColumns] = useState();
   const [isLoading, setIsLoading] = useState({
     board: false,
@@ -23,11 +26,19 @@ export default function RestrictionCreator({
     columns: [],
   });
   useEffect(() => {
-    onSetColumns();
+    if (restriction.board.value !== null) onSetColumns();
   }, [restriction.board]);
   const onSetColumns = async () => {
     setIsLoading({ ...isLoading, column: true });
     const columns = await getBoardColumns(restriction);
+    if (!columns?.length) {
+      Swal.fire({
+        title: "Oops!",
+        html: `<p>It looks like you dont have any columns in <a href="https://${slug}.monday.com/boards/${restriction.board.value}" target="_blank">${restriction?.board?.label}</a>!</p> <p> Please choose a different board, or add columns on that board.</p>`,
+        icon: "error",
+      });
+      resetSelect();
+    }
     setIsLoading({ ...isLoading, column: false });
     setBoardColumns(columns);
   };
@@ -37,6 +48,11 @@ export default function RestrictionCreator({
       await addNewRestriction(restriction);
       setIsLoading({ ...isLoading, button: false });
       resetSelect();
+      monday.execute("notice", {
+        message: `congrats! New restriction was created at ${restriction.board.label}!`,
+        type: "success", // or "error" (red), or "info" (blue)
+        timeout: 10000,
+      });
     } else console.log("not valid");
   };
   const resetSelect = () => {
@@ -53,7 +69,6 @@ export default function RestrictionCreator({
       setRestriction({ ...restriction, columns: item });
     }
   };
-  console.log(`isLoading.button`, isLoading.button);
 
   return (
     <div className="create-restriction">

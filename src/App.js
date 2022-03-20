@@ -15,7 +15,7 @@ const monday = mondaySdk();
 
 export default function App() {
   const [boards, setBoards] = useState([]);
-  const [account, setAccount] = useState();
+  const [account, setAccount] = useState({ accountId: null, slug: null });
   const [currentNav, setCurrentNav] = useState("");
   const [existingRestrictions, setExistingRestrictions] = useState([]);
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function App() {
     console.log("אהוב את המלאכה");
   }, []);
   useEffect(() => {
-    account && getRestrictions();
+    account.accountId && getRestrictions();
   }, [account]);
   useEffect(() => {
     const filteredBoards = boards?.filter(
@@ -41,7 +41,7 @@ export default function App() {
   const addNewRestriction = async (newRestriction) => {
     const columnIds = newRestriction.columns.map((col) => col?.value);
     const _newRestriction = {
-      accountId: account,
+      accountId: account.accountId,
       ...newRestriction,
     };
     const _newRest = await utils.addBoardRestriction(_newRestriction);
@@ -78,7 +78,7 @@ export default function App() {
     }
   };
   const getRestrictions = async () => {
-    let rests = await utils.getExistingBoardRestrictions(account);
+    let rests = await utils.getExistingBoardRestrictions(account.accountId);
     rests = await Promise.all(rests);
     const fullRests = await getRestrictionLabels(rests);
     setExistingRestrictions(fullRests);
@@ -123,6 +123,7 @@ export default function App() {
     const query = `query{
       account{
         id
+        slug
       }
       boards{
         name
@@ -130,7 +131,10 @@ export default function App() {
       }
     }`;
     const res = await monday.api(query);
-    setAccount(Number(res.data.account.id));
+    setAccount({
+      accountId: Number(res.data.account.id),
+      slug: res.data.account.slug,
+    });
     // console.log(`getBoards -> res`, res.data);
     const _boards = res.data.boards;
     setBoards(_boards);
@@ -186,6 +190,7 @@ export default function App() {
                   addNewRestriction={addNewRestriction}
                   getBoardColumns={getBoardColumns}
                   validateNewRestriction={validateNewRestriction}
+                  slug={account?.slug}
                 />
               }
             />
@@ -195,11 +200,12 @@ export default function App() {
                 <ExistingRestrictions
                   boardsForDropdown={boardsForDropdown}
                   getBoardColumns={getBoardColumns}
-                  account={account}
+                  account={account?.accountId}
                   restrictions={existingRestrictions}
                   setRestrictions={setExistingRestrictions}
                   validateNewRestriction={validateNewRestriction}
                   getRestrictions={getRestrictions}
+                  monday={monday}
                 />
               }
             />
