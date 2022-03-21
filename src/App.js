@@ -65,7 +65,11 @@ export default function App() {
         const res = await monday.api(query);
         const { columns } = res.data.boards[0];
         const filteredColumns = columns
-          .filter((col) => col.title !== "Name")
+          .filter(
+            (col) =>
+              col.title !== "Name" &&
+              !["pulse-updated", "lookup"].includes(col.type)
+          )
           .map((col) => {
             return { value: col.id, label: col.title };
           });

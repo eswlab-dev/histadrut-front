@@ -23,6 +23,11 @@ export default function ExistingRestrictions({
         .data;
       restrictions[i] = newRestriction;
       setRestrictions(restrictions);
+      monday.execute("notice", {
+        message: `the restriction on ${restriction.board.label} was successfully updated!`,
+        type: "success", // or "error" (red), or "info" (blue)
+        timeout: 10000,
+      });
     } else {
       monday.execute("notice", {
         message: `Please choose columns to restrict by!`,

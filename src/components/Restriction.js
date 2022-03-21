@@ -53,14 +53,14 @@ export default function Restriction({
         Columns
         <Select
           className="restriction-select"
-          placeholder="Please choose mandatory columns"
+          placeholder="Please choose restricting columns"
           onChange={(column) => {
             onSetRestriction(i, column, false, onSetLoadState);
           }}
           options={columnsForDropdown}
           value={restriction?.columns}
           isLoading={isLoading?.columns || !columnsForDropdown?.length}
-          isDisabled={!columnsForDropdown?.length}
+          isDisabled={isLoading?.columns || !columnsForDropdown?.length}
           isClearable
           isMulti
         />
