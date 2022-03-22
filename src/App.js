@@ -15,6 +15,7 @@ const monday = mondaySdk();
 
 export default function App() {
   const [boards, setBoards] = useState([]);
+  console.log(`App -> boards`, boards.length);
   const [account, setAccount] = useState({ accountId: null, slug: null });
   const [currentNav, setCurrentNav] = useState("");
   const [existingRestrictions, setExistingRestrictions] = useState([]);
@@ -23,6 +24,7 @@ export default function App() {
       window.location.hash.includes("create") ? "create" : "existing"
     );
     getBoards();
+    console.log(`useEffect ->  window.location`, window.location);
     console.log("אהוב את המלאכה");
   }, []);
   useEffect(() => {
@@ -68,7 +70,13 @@ export default function App() {
           .filter(
             (col) =>
               col.title !== "Name" &&
-              !["pulse-updated", "lookup"].includes(col.type)
+              ![
+                "pulse-updated",
+                "lookup",
+                "formula",
+                "columns-battery",
+                "button",
+              ].includes(col.type)
           )
           .map((col) => {
             return { value: col.id, label: col.title };
@@ -129,7 +137,7 @@ export default function App() {
         id
         slug
       }
-      boards{
+      boards(limit:2000){
         name
         id
       }

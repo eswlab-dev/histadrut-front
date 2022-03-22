@@ -67,18 +67,24 @@ export default function ExistingRestrictions({
 
   return (
     <div className="existing-restrictions">
-      {restrictions?.map((restriction, i) => (
-        <Restriction
-          key={i}
-          i={i}
-          restriction={restriction}
-          getBoardColumns={getBoardColumns}
-          editRestriction={editRestriction}
-          deleteRestriction={deleteRestriction}
-          boardsForDropdown={boardsForDropdown}
-          onSetRestriction={onSetRestriction}
-        />
-      ))}
+      {restrictions?.length ? (
+        restrictions?.map((restriction, i) => (
+          <Restriction
+            key={i}
+            i={i}
+            restriction={restriction}
+            getBoardColumns={getBoardColumns}
+            editRestriction={editRestriction}
+            deleteRestriction={deleteRestriction}
+            boardsForDropdown={boardsForDropdown}
+            onSetRestriction={onSetRestriction}
+          />
+        ))
+      ) : (
+        <div className="no-existing">
+          <p>There's no restrictions yet...</p>
+        </div>
+      )}
     </div>
   );
 }
