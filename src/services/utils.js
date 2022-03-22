@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const domain =
-  process.env.NODE_ENV === "development"
+  process.env.NODE_ENV !== "development"
     ? "https://histadrut-inters.herokuapp.com"
     : "https://d4eb-2a0e-9cc0-23f4-d00-fce6-3347-eae8-4c60.eu.ngrok.io";
 export async function addBoardRestriction(restriction) {
