@@ -9,28 +9,35 @@ export default function RestrictionCreator({
   monday,
   boardsForDropdown,
   addNewRestriction,
-  getBoardColumns,
+  getBoardColumnsAndGroups,
   validateNewRestriction,
   slug,
 }) {
   console.log(`slug`, slug);
   const [boardColumns, setBoardColumns] = useState();
+  const [boardGroups, setBoardGroups] = useState();
   const [isLoading, setIsLoading] = useState({
     board: false,
     column: false,
+    group: false,
     button: false,
   });
 
   const [restriction, setRestriction] = useState({
     board: { value: null, label: "Choose a board to restrict" },
+    group: { value: null, label: "Choose a group to restrict" },
     columns: [],
   });
   useEffect(() => {
-    if (restriction.board.value !== null) onSetColumns();
+    if (restriction.board.value !== null) onSetColumnsAndGroups();
   }, [restriction.board]);
-  const onSetColumns = async () => {
-    setIsLoading({ ...isLoading, column: true });
-    const columns = await getBoardColumns(restriction);
+  const onSetColumnsAndGroups = async () => {
+    setIsLoading({ ...isLoading, column: true, group: true });
+    const { columns, groups } = await getBoardColumnsAndGroups(restriction);
+    console.log(`onSetColumnsAndGroups ->  columns, groups`, columns, groups);
+    // const hola = await getBoardColumnsAndGroups(restriction);
+    // console.log(`onSetColumnsAndGroups -> hola`, hola);
+    // return;
     if (!columns?.length) {
       Swal.fire({
         title: "Oops!",
@@ -41,9 +48,10 @@ export default function RestrictionCreator({
     }
     setIsLoading({ ...isLoading, column: false });
     setBoardColumns(columns);
+    setBoardGroups(groups);
   };
   const onAddNewRestriction = async () => {
-    if (validateNewRestriction(restriction)) {
+    if (validateNewRestriction(restriction, true)) {
       setIsLoading({ ...isLoading, button: true });
       await addNewRestriction(restriction);
       setIsLoading({ ...isLoading, button: false });
@@ -58,14 +66,19 @@ export default function RestrictionCreator({
   const resetSelect = () => {
     setRestriction({
       board: { value: null, label: "Choose a board to restrict" },
+      group: { value: null, label: "Choose a group to restrict" },
       columns: [],
     });
   };
 
-  const onSetRestriction = (isBoard, item) => {
-    if (isBoard) {
+  const onSetRestriction = (kind, item) => {
+    console.log(`onSetRestriction -> item`, item);
+    console.log(`onSetRestriction -> kind`, kind);
+    if (kind === "board") {
       setRestriction({ ...restriction, board: item });
-    } else {
+    } else if (kind === "group") {
+      setRestriction({ ...restriction, group: item });
+    } else if (kind === "column") {
       setRestriction({ ...restriction, columns: item });
     }
   };
@@ -85,10 +98,22 @@ export default function RestrictionCreator({
               placeholder="Choose board to restrict"
               className="restriction-select"
               options={boardsForDropdown}
-              onChange={(board) => onSetRestriction(true, board)}
+              onChange={(board) => onSetRestriction("board", board)}
               value={restriction.board}
             />
           )}
+        </label>
+        <label className="restriction-label">
+          Groups
+          <Select
+            isLoading={isLoading.group}
+            placeholder="Choose board to restrict"
+            className="restriction-select"
+            isDisabled={!boardGroups?.length}
+            options={boardGroups}
+            onChange={(group) => onSetRestriction("group", group)}
+            value={restriction.group}
+          />
         </label>
         <label
           className="restriction-label"
@@ -98,7 +123,7 @@ export default function RestrictionCreator({
           <Select
             placeholder="Choose column to restrict"
             className="restriction-select"
-            onChange={(column) => onSetRestriction(false, column)}
+            onChange={(column) => onSetRestriction("column", column)}
             options={boardColumns}
             isDisabled={!boardColumns?.length}
             value={restriction?.columns}

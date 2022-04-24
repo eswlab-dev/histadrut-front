@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Restriction from "../components/Restriction";
 import * as utils from "../services/utils";
+import Loader from "monday-ui-react-core/dist/Loader";
 
 export default function ExistingRestrictions({
-  getBoardColumns,
+  getBoardColumnsAndGroups,
   account,
   boardsForDropdown,
   restrictions,
@@ -12,13 +13,22 @@ export default function ExistingRestrictions({
   getRestrictions,
   monday,
 }) {
+  const [isLoadingRestrictions, setIsLoadingRestrictions] = useState(true);
   useEffect(() => {
-    if (account) getRestrictions();
+    _getRestrictions();
   }, [account]);
 
+  const _getRestrictions = async () => {
+    if (account) {
+      await getRestrictions();
+      setIsLoadingRestrictions(false);
+    }
+  };
+
   const editRestriction = async (i, restriction, onSetLoadState) => {
+    console.log(`editRestriction -> i, restriction,`, i, restriction);
     onSetLoadState("edit", true);
-    if (validateNewRestriction(restriction)) {
+    if (validateNewRestriction(restriction, false)) {
       const newRestriction = (await utils.editRestriction(restriction, account))
         .data;
       restrictions[i] = newRestriction;
@@ -38,14 +48,21 @@ export default function ExistingRestrictions({
     onSetLoadState("edit", false);
   };
 
-  const onSetRestriction = (i, item, isBoard, onSetLoadState) => {
-    if (isBoard) {
+  const onSetRestriction = (i, item, kind, onSetLoadState) => {
+    console.log(`onSetRestriction -> i, item, kind`, i, item, kind);
+    if (kind === "board") {
       onSetLoadState("board", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { board: item, columns: [] };
       setRestrictions([...newRestrictions]);
       onSetLoadState("board", false);
-    } else {
+    } else if (kind === "group") {
+      onSetLoadState("group", true);
+      const newRestrictions = restrictions;
+      newRestrictions[i] = { ...restrictions[i], group: item };
+      setRestrictions([...newRestrictions]);
+      onSetLoadState("group", false);
+    } else if (kind === "columns") {
       onSetLoadState("columns", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { ...restrictions[i], columns: item };
@@ -64,16 +81,24 @@ export default function ExistingRestrictions({
     onSetLoadState("delete", false);
     setRestrictions([...filteredRestrictions]);
   };
+  console.log(`restrictions`, restrictions);
 
   return (
     <div className="existing-restrictions">
-      {restrictions?.length ? (
+      {isLoadingRestrictions ? (
+        <div className="loader-div">
+          <div className="loader">
+            <Loader />
+          </div>
+          <p>Loading Existing Restrictions...</p>
+        </div>
+      ) : restrictions?.length ? (
         restrictions?.map((restriction, i) => (
           <Restriction
             key={i}
             i={i}
             restriction={restriction}
-            getBoardColumns={getBoardColumns}
+            getBoardColumnsAndGroups={getBoardColumnsAndGroups}
             editRestriction={editRestriction}
             deleteRestriction={deleteRestriction}
             boardsForDropdown={boardsForDropdown}

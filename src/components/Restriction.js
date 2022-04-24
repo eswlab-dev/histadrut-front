@@ -6,13 +6,14 @@ import Select from "react-select";
 export default function Restriction({
   i,
   restriction,
-  getBoardColumns,
+  getBoardColumnsAndGroups,
   editRestriction,
   deleteRestriction,
   boardsForDropdown,
   onSetRestriction,
 }) {
   const [columnsForDropdown, setColumnsForDropdown] = useState([]);
+  const [groupsForDropdown, setGroupsForDropdown] = useState([]);
   const [isLoading, setIsLoading] = useState({
     edit: false,
     delete: false,
@@ -20,14 +21,14 @@ export default function Restriction({
     columns: false,
   });
   useEffect(() => {
-    if (restriction) {
-      getColumns();
-      // setRestriction(restriction);
+    if (restriction?.board?.value) {
+      getColumnsAndGroups();
     }
   }, [restriction]);
-  const getColumns = async () => {
-    const columns = await getBoardColumns(restriction);
+  const getColumnsAndGroups = async () => {
+    const { columns, groups } = await getBoardColumnsAndGroups(restriction);
     setColumnsForDropdown(columns);
+    setGroupsForDropdown(groups);
     console.log(`getColumns -> columns`, columns);
   };
   const onSetLoadState = (key, isLoad) => {
@@ -43,9 +44,22 @@ export default function Restriction({
           options={boardsForDropdown}
           placeholder="Please choose a board"
           onChange={(board) => {
-            onSetRestriction(i, board, true, onSetLoadState);
+            onSetRestriction(i, board, "board", onSetLoadState);
           }}
           value={restriction.board}
+          isLoading={isLoading?.board}
+        />
+      </label>
+      <label className="restriction-label">
+        Group
+        <Select
+          className="restriction-select"
+          options={groupsForDropdown}
+          placeholder="Please choose a board"
+          onChange={(group) => {
+            onSetRestriction(i, group, "group", onSetLoadState);
+          }}
+          value={restriction.group}
           isLoading={isLoading?.board}
         />
       </label>
@@ -55,7 +69,7 @@ export default function Restriction({
           className="restriction-select"
           placeholder="Please choose restricting columns"
           onChange={(column) => {
-            onSetRestriction(i, column, false, onSetLoadState);
+            onSetRestriction(i, column, "columns", onSetLoadState);
           }}
           options={columnsForDropdown}
           value={restriction?.columns}

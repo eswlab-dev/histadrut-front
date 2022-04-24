@@ -24,39 +24,49 @@ export default function App() {
       window.location.hash.includes("create") ? "create" : "existing"
     );
     getBoards();
-    console.log(`useEffect ->  window.location`, window.location);
+    console.table({
+      href: window.location.href,
+      NODE_ENV: process.env.NODE_ENV,
+    });
     console.log("אהוב את המלאכה");
   }, []);
   useEffect(() => {
     account.accountId && getRestrictions();
   }, [account]);
-  useEffect(() => {
-    const filteredBoards = boards?.filter(
-      (board) =>
-        !existingRestrictions.find(
-          (restriction) =>
-            Number(restriction?.board?.value) === Number(board?.id)
-        )
-    );
-    setBoards(filteredBoards);
-  }, [existingRestrictions]);
+  // useEffect(() => {
+  //   const filteredBoards = boards?.filter(
+  //     (board) =>
+  //       !existingRestrictions.find(
+  //         (restriction) =>
+  //           Number(restriction?.board?.value) === Number(board?.id)
+  //       )
+  //   );
+  //   setBoards(filteredBoards);
+  // }, [existingRestrictions]);
   const addNewRestriction = async (newRestriction) => {
+    console.log(`addNewRestriction -> newRestriction`, newRestriction);
     const columnIds = newRestriction.columns.map((col) => col?.value);
     const _newRestriction = {
       accountId: account.accountId,
+
       ...newRestriction,
     };
     const _newRest = await utils.addBoardRestriction(_newRestriction);
     const labeledRestriction = await getRestrictionLabels([newRestriction]);
+    console.log(`addNewRestriction -> labeledRestriction`, labeledRestriction);
     setExistingRestrictions([...existingRestrictions, ...labeledRestriction]);
   };
 
-  const getBoardColumns = async (restriction) => {
+  const getBoardColumnsAndGroups = async (restriction) => {
     try {
       const { board } = restriction;
       if (board?.value) {
         const query = `query{
           boards(ids:${board.value}){
+            groups{
+              id
+              title
+            }
             columns{
               id
               type
@@ -65,7 +75,12 @@ export default function App() {
           }
         }`;
         const res = await monday.api(query);
-        const { columns } = res.data.boards[0];
+        const { columns, groups } = res.data.boards[0];
+        console.log(
+          `getBoardColumnsAndGroups -> columns, groups`,
+          columns,
+          groups
+        );
         const filteredColumns = columns
           .filter(
             (col) =>
@@ -81,12 +96,14 @@ export default function App() {
           .map((col) => {
             return { value: col.id, label: col.title };
           });
-
-        return filteredColumns;
+        const mappedGroups = groups?.map((group) => {
+          return { value: group.id, label: group.title };
+        });
+        return { columns: filteredColumns, groups: mappedGroups };
       } else {
       }
     } catch (err) {
-      console.log(`getBoardColumns -> err`, err);
+      console.log(`getBoardColumnsAndGroups -> err`, err);
     }
   };
   const getRestrictions = async () => {
@@ -100,19 +117,31 @@ export default function App() {
     try {
       const labeled = [];
       for (let restriction of restrictions) {
-        const query = `query{
+        const groupId = restriction?.group?.value || restriction?.groupId;
+        const columnIds =
+          restriction?.columns?.map((col) => col.id || col.value) ||
+          restriction?.columnIds;
+        const query = `query{ 
           boards(ids:${restriction.boardId || restriction.board.value}){
             name
-            columns(ids:${JSON.stringify(restriction.columnIds)}){
+            groups(ids:[${JSON.stringify(groupId)}]){
+              title
+              id
+            }
+            columns(ids:${JSON.stringify(columnIds)}){
               id
               title
             }
           }
         }`;
+        console.log(`getRestrictionLabels -> query`, query);
         const res = await monday.api(query);
-        console.log(`getRestrictionLabels -> res`, res);
+        console.log(`getRestrictionLabels -> res`, res.data.boards[0]);
         const boardName = res.data.boards[0].name;
-
+        const group = {
+          label: res.data.boards[0].groups[0].title,
+          value: restriction.groupId,
+        };
         const columns = res.data.boards[0].columns.map((col) => {
           return { value: col.id, label: col.title };
         });
@@ -122,6 +151,7 @@ export default function App() {
             label: boardName,
           },
           columns,
+          group,
           _id: restriction._id,
         });
       }
@@ -159,23 +189,54 @@ export default function App() {
       });
     }
   }, [boards]);
-  const validateNewRestriction = (restriction) => {
+  const validateNewRestriction = (restriction, isNew) => {
+    console.log(`validateNewRestriction -> isNew`, isNew);
     console.log(`validateNewRestriction -> restriction`, restriction);
-    const { label, value } = restriction?.board;
+    const { board, group } = restriction;
     const { columns } = restriction;
-    if (label && value && columns.length) {
-      return true;
+    if (
+      board.label &&
+      board.value &&
+      group.label &&
+      group.value &&
+      columns.length
+    ) {
+      const isExists = checkExistence(restriction) && isNew; // if it's an existing restriction dont check for existence
+      console.log(`validateNewRestriction -> isExists`, isExists);
+      if (isExists) {
+        Swal.fire({
+          title: "Couldn't add restriction",
+          html: `<p>You already have an existing restriction on <b>${restriction.group.label}</b> group in <b>${restriction.board.label}</b> board</p>`,
+          icon: "error",
+          returnFocus: true,
+          allowEnterKey: true,
+          allowEscapeKey: true,
+        });
+        return false;
+      } else {
+        return true;
+      }
     } else {
       Swal.fire({
         title: "Couldn't add restriction",
         text: "some columns are missing",
-        icon: "warning",
+        icon: "error",
         returnFocus: true,
         allowEnterKey: true,
         allowEscapeKey: true,
       });
       return false;
     }
+  };
+  const checkExistence = (restriction) => {
+    console.log(`checkExistence -> restriction`, restriction);
+    const existing = existingRestrictions.find(
+      (rest) =>
+        Number(rest.board.value) === Number(restriction.board.value) &&
+        rest.group.value === restriction.group.value
+    );
+    console.log(`existing -> existing`, existing);
+    return !!existing;
   };
 
   return (
@@ -200,7 +261,7 @@ export default function App() {
                   boards={boards}
                   monday={monday}
                   addNewRestriction={addNewRestriction}
-                  getBoardColumns={getBoardColumns}
+                  getBoardColumnsAndGroups={getBoardColumnsAndGroups}
                   validateNewRestriction={validateNewRestriction}
                   slug={account?.slug}
                 />
@@ -211,7 +272,7 @@ export default function App() {
               element={
                 <ExistingRestrictions
                   boardsForDropdown={boardsForDropdown}
-                  getBoardColumns={getBoardColumns}
+                  getBoardColumnsAndGroups={getBoardColumnsAndGroups}
                   account={account?.accountId}
                   restrictions={existingRestrictions}
                   setRestrictions={setExistingRestrictions}
