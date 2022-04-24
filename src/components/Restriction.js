@@ -12,6 +12,7 @@ export default function Restriction({
   boardsForDropdown,
   onSetRestriction,
 }) {
+  console.log(`restriction`, restriction);
   const [columnsForDropdown, setColumnsForDropdown] = useState([]);
   const [groupsForDropdown, setGroupsForDropdown] = useState([]);
   const [isLoading, setIsLoading] = useState({
@@ -29,11 +30,14 @@ export default function Restriction({
     const { columns, groups } = await getBoardColumnsAndGroups(restriction);
     setColumnsForDropdown(columns);
     setGroupsForDropdown(groups);
-    console.log(`getColumns -> columns`, columns);
+    // console.log(`getColumns -> columns`, columns);
   };
   const onSetLoadState = (key, isLoad) => {
     setIsLoading({ ...isLoading, [key]: isLoad });
   };
+  // const onEditRestriction = async () => {
+
+  // }
 
   return restriction ? (
     <div className="restriction" key={i}>

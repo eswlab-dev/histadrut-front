@@ -32,7 +32,7 @@ export async function editRestriction(restriction, account) {
     filteredRestriction
   );
   // console.log(`editRestriction -> edited`, edited);
-  return edited;
+  if (edited) return restriction;
 }
 export async function deleteRestriction(restriction) {
   const { _id } = restriction;

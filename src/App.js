@@ -192,14 +192,17 @@ export default function App() {
   const validateNewRestriction = (restriction, isNew) => {
     console.log(`validateNewRestriction -> isNew`, isNew);
     console.log(`validateNewRestriction -> restriction`, restriction);
-    const { board, group } = restriction;
-    const { columns } = restriction;
+
+    const { board, group, columns } = restriction;
+    // const { columns } = restriction;
     if (
+      // isNew?
       board.label &&
       board.value &&
       group.label &&
       group.value &&
       columns.length
+      // : boardId
     ) {
       const isExists = checkExistence(restriction) && isNew; // if it's an existing restriction dont check for existence
       console.log(`validateNewRestriction -> isExists`, isExists);

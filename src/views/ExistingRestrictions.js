@@ -13,6 +13,7 @@ export default function ExistingRestrictions({
   getRestrictions,
   monday,
 }) {
+  console.log(`restrictions`, restrictions);
   const [isLoadingRestrictions, setIsLoadingRestrictions] = useState(true);
   useEffect(() => {
     _getRestrictions();
@@ -29,8 +30,9 @@ export default function ExistingRestrictions({
     console.log(`editRestriction -> i, restriction,`, i, restriction);
     onSetLoadState("edit", true);
     if (validateNewRestriction(restriction, false)) {
-      const newRestriction = (await utils.editRestriction(restriction, account))
-        .data;
+      const newRestriction = await utils.editRestriction(restriction, account);
+      // const newRestriction = await utils.editRestriction(restriction, account).data;
+      console.log(`editRestriction -> newRestriction`, newRestriction);
       restrictions[i] = newRestriction;
       setRestrictions(restrictions);
       monday.execute("notice", {
@@ -50,25 +52,25 @@ export default function ExistingRestrictions({
 
   const onSetRestriction = (i, item, kind, onSetLoadState) => {
     console.log(`onSetRestriction -> i, item, kind`, i, item, kind);
+    onSetLoadState(kind, true);
     if (kind === "board") {
-      onSetLoadState("board", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { board: item, columns: [] };
       setRestrictions([...newRestrictions]);
-      onSetLoadState("board", false);
+      // onSetLoadState("board", false);
     } else if (kind === "group") {
-      onSetLoadState("group", true);
+      // onSetLoadState("group", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { ...restrictions[i], group: item };
       setRestrictions([...newRestrictions]);
-      onSetLoadState("group", false);
+      // onSetLoadState("group", false);
     } else if (kind === "columns") {
-      onSetLoadState("columns", true);
+      // onSetLoadState("columns", true);
       const newRestrictions = restrictions;
       newRestrictions[i] = { ...restrictions[i], columns: item };
       setRestrictions([...newRestrictions]);
-      onSetLoadState("columns", false);
     }
+    onSetLoadState(kind, false);
   };
 
   const deleteRestriction = async (i, onSetLoadState) => {

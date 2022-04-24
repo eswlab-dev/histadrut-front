@@ -36,7 +36,7 @@ export default function RestrictionCreator({
     const { columns, groups } = await getBoardColumnsAndGroups(restriction);
     console.log(`onSetColumnsAndGroups ->  columns, groups`, columns, groups);
     // const hola = await getBoardColumnsAndGroups(restriction);
-    // console.log(`onSetColumnsAndGroups -> hola`, hola);
+    // // console.log(`onSetColumnsAndGroups -> hola`, hola);
     // return;
     if (!columns?.length) {
       Swal.fire({
@@ -72,8 +72,8 @@ export default function RestrictionCreator({
   };
 
   const onSetRestriction = (kind, item) => {
-    console.log(`onSetRestriction -> item`, item);
-    console.log(`onSetRestriction -> kind`, kind);
+    // console.log(`onSetRestriction -> item`, item);
+    // console.log(`onSetRestriction -> kind`, kind);
     if (kind === "board") {
       setRestriction({ ...restriction, board: item });
     } else if (kind === "group") {
